@@ -6,6 +6,8 @@ machine boots the **Limine menu first on every power-on** — no F12, no firmwar
 interaction — and Windows is offered as a menu entry alongside Omarchy and bootable
 snapshots.
 
+[![Win-Omarchy demo](https://img.youtube.com/vi/Bxb4HwsUO34/maxresdefault.jpg)](https://youtu.be/Bxb4HwsUO34)
+
 Forked from [Dual-Boot-Omarchy](https://git.no-signal.uk/nosignal/Dual-Boot-Omarchy).
 
 ## How Limine-first boot is guaranteed
