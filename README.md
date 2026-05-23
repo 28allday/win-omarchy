@@ -48,10 +48,15 @@ The installer will not proceed past Windows detection until you confirm you have
 ## Quick start
 
 ```bash
-# With the Omarchy ISO in this directory:
+# 1. Clone the repo
+git clone https://github.com/28allday/win-omarchy.git
+# (or the Forgejo mirror: git clone https://git.no-signal.uk/nosignal/win-omarchy.git)
+cd win-omarchy
+
+# 2. Put your Omarchy ISO in this directory and run the patcher
 sudo ./patch-win-omarchy.sh
 
-# Or point it at the ISO directly:
+# Or point it at the ISO directly (from anywhere):
 sudo ./patch-win-omarchy.sh /path/to/omarchy-3.8.0.iso
 ```
 
