@@ -1,0 +1,16 @@
+# Built/source ISOs (too large for git; rebuild with patch-win-omarchy.sh)
+*.iso
+
+# VM test runtime state
+vm/
+
+# Patcher work dirs (auto-created/removed during a build)
+.omarchy-patch-*/
+
+# Backups / archives
+*.bak
+
+# Local dev-only files — not part of the user-facing repo
+vm-test.sh
+NOTES.md
+VIDEO-NOTES.md
