@@ -122,6 +122,36 @@ header() {
     echo ""
 }
 
+# Full Tokyo Night console palette — same 16 entries the stock Omarchy
+# .automated_script.sh sets. Setting only bg/fg leaves gum's accent colours
+# (yellow "Installing...", blue selection bars) on the harsh default VGA
+# palette, which is what "lost its Omarchy colours" looks like.
+set_tokyo_night_colors() {
+    # WINOMA_ON_VT: set by .zlogin when we boot on tty1 but run inside
+    # script(1)'s pty for QEMU serial logging — $(tty) is /dev/pts/0 then,
+    # yet output still lands on the VT, so the palette escapes are safe.
+    if [[ $(tty) == "/dev/tty"* || -n "${WINOMA_ON_VT:-}" ]]; then
+        echo -en "\e]P01a1b26" # black (background)
+        echo -en "\e]P1f7768e" # red
+        echo -en "\e]P29ece6a" # green
+        echo -en "\e]P3e0af68" # yellow
+        echo -en "\e]P47aa2f7" # blue
+        echo -en "\e]P5bb9af7" # magenta
+        echo -en "\e]P67dcfff" # cyan
+        echo -en "\e]P7a9b1d6" # white
+        echo -en "\e]P8414868" # bright black
+        echo -en "\e]P9f7768e" # bright red
+        echo -en "\e]PA9ece6a" # bright green
+        echo -en "\e]PBe0af68" # bright yellow
+        echo -en "\e]PC7aa2f7" # bright blue
+        echo -en "\e]PDbb9af7" # bright magenta
+        echo -en "\e]PE7dcfff" # bright cyan
+        echo -en "\e]PFc0caf5" # bright white (foreground)
+        echo -en "\033[0m"
+        clear
+    fi
+}
+
 cleanup_and_exit() {
     warn "Setup cancelled or failed. Cleaning up..."
     umount -R /mnt 2>/dev/null || true
@@ -380,6 +410,8 @@ WINREPAIR
 #===============================================================================
 # MAIN MENU
 #===============================================================================
+
+set_tokyo_night_colors
 
 header "OMARCHY DUAL-BOOT INSTALLER"
 
@@ -674,14 +706,8 @@ export OMARCHY_PATH=/root/omarchy
 export OMARCHY_INSTALL=/root/omarchy/install
 source "$OMARCHY_INSTALL/helpers/all.sh" 2>/dev/null || true
 
-# Set colors
-if [[ $(tty) == "/dev/tty"* ]]; then
-    echo -en "\e]P01a1b26"
-    echo -en "\e]P7a9b1d6"
-    echo -en "\e]PFc0caf5"
-    echo -en "\033[0m"
-    clear
-fi
+# Set the full Tokyo Night palette (re-applied here in case anything reset it)
+set_tokyo_night_colors
 
 # Drain any buffered keystrokes / stray terminal bytes left over from the
 # "Press Enter" prompt and the logo animation, so they don't leak into the
@@ -1285,14 +1311,23 @@ if [[ -f "$WORK_DIR/extracted/root/.automated_script.sh" ]]; then
 fi
 
 # Replace .zlogin to run our dual-boot setup
-# When a serial port exists (e.g. running under QEMU with -serial), tee the
-# installer's full stdout+stderr to it so the host can capture a forensic log
-# of the install run without scraping the QEMU window.
+# Under QEMU (vm-test.sh with -serial), mirror the installer's output to
+# /dev/ttyS0 so the host can capture a forensic log without scraping the
+# QEMU window. Two things matter here:
+#   1. Gate on QEMU via DMI — /dev/ttyS0 exists and is root-writable on
+#      nearly every REAL PC too, so a bare -w check used to pipe the whole
+#      installer through tee on hardware. gum then saw a pipe instead of a
+#      TTY and dropped colours/highlighting, and redraws garbled.
+#   2. Use script(1) (a pty), not tee (a pipe), so gum still detects a real
+#      terminal even when logging — VM runs render correctly too.
 cat > "$WORK_DIR/extracted/root/.zlogin" << 'EOF'
 # Omarchy Dual-Boot Installer
 if [[ $(tty) == "/dev/tty1" ]]; then
-    if [[ -w /dev/ttyS0 ]]; then
-        /root/dualboot-setup.sh 2>&1 | tee /dev/ttyS0
+    # We're on the VT console — tell set_tokyo_night_colors it's safe to set
+    # the kernel palette even when $(tty) is a pts (inside script's pty below).
+    export WINOMA_ON_VT=1
+    if grep -qi qemu /sys/class/dmi/id/sys_vendor 2>/dev/null && [[ -w /dev/ttyS0 ]]; then
+        script -qefc /root/dualboot-setup.sh /dev/ttyS0
     else
         /root/dualboot-setup.sh
     fi
