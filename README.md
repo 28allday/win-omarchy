@@ -150,3 +150,6 @@ Management.
 ## License
 
 Provided as-is for the Omarchy community.
+
+Win-Omarchy is an unofficial community project — not affiliated with or endorsed by
+[Omarchy](https://omarchy.com) or Basecamp. Omarchy itself is MIT-licensed.
